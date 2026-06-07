@@ -1,77 +1,346 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 乙級能力檢定</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人工智慧乙級證照 - 50題隨機抽考模擬測驗</title>
+    <style>
+        :root {
+            --primary: #1e3c72;
+            --secondary: #2a5298;
+            --bg: #f5f7fa;
+            --text: #333;
+            --card-bg: #ffffff;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+        body {
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 850px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .info-panel {
+            background: white;
+            border-left: 5px solid var(--primary);
+            padding: 1.2rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .result-panel {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .status-pass { color: var(--success); font-size: 1.8rem; font-weight: bold; }
+        .status-fail { color: var(--danger); font-size: 1.8rem; font-weight: bold; }
+        .wrong-list {
+            text-align: left;
+            background: #fff5f5;
+            border: 1px solid #ffe3e3;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        .wrong-list h3 { margin-top: 0; color: var(--danger); }
+        .wrong-item { margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        .question-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; }
+        .options-list { list-style: none; padding: 0; margin: 0; }
+        .option-item { margin-bottom: 0.6rem; }
+        .option-item label {
+            display: block;
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-item label:hover { background: #e9ecef; }
+        .option-item input { margin-right: 0.6rem; }
+        
+        /* 答案反饋樣式 */
+        .selected-correct { border: 2px solid var(--success) !important; background: #e8f8f0 !important; }
+        .selected-wrong { border: 2px solid var(--danger) !important; background: #fdedec !important; }
+        .highlight-correct { border: 2px solid var(--success) !important; background: #e8f8f0 !important; font-weight: bold; }
+        .feedback-text { margin-top: 0.8rem; font-weight: bold; display: none; }
+        
+        .actions { text-align: center; margin: 2rem 0; }
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 0.8rem 2.5rem;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+        }
+        button:hover { transform: translateY(-2px); opacity: 0.95; }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+    <header>
+        <h1>人工智慧乙級證照能力檢定</h1>
+        <p>50題隨機抽考線上模擬測驗</p>
+    </header>
 
-  <div id="start-screen" class="card">
-    <h1>AI 乙級能力檢定</h1>
+    <div class="container">
+        <div class="info-panel">
+            💡 <b>測驗規則說明：</b><br>
+            系統已從題庫中<b>隨機抽出 50 題</b>（且每題的選項順序皆已打亂）。<br>
+            每題 2 分，滿分 100 分，<b>及格分數為 80 分</b>。考完後將提供錯題統計與詳細解析！
+        </div>
 
-    <p>
-      本測驗共 50 題，每題 2 分。<br>
-      滿分 100 分，80 分以上可取得證照。
-    </p>
+        <div id="result-panel" class="result-panel">
+            <div id="pass-status"></div>
+            <h2 id="score-text" style="margin: 0.5rem 0;"></h2>
+            <div id="wrong-summary" class="wrong-list"></div>
+            <button style="margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1.5rem;" onclick="location.reload()">再考一次（重新抽題）</button>
+        </div>
 
-    <button id="start-btn">開始測驗</button>
-  </div>
-
-  <div id="quiz-screen" class="hidden">
-
-    <div class="top-bar">
-      <h2>AI 乙級能力檢定</h2>
-      <div id="progress">第 1 題 / 50 題</div>
+        <form id="quiz-form">
+            <div id="quiz-container"></div>
+            <div class="actions">
+                <button type="button" id="submit-btn" onclick="checkAnswers()">提交考卷並計算分數</button>
+            </div>
+        </form>
     </div>
 
-    <div class="card">
+    <script>
+        // 題庫大數據 (精選並規範化自 PDF 全題庫)
+        const allQuestions = [
+            { q: "人工智慧最基本的模型架構三層，以下哪一個不隸屬模型架構？", ans: 4, opts: ["輸入層", "隱藏層", "輸出層", "應用層"] },
+            { q: "請寫出 CNN 全名：", ans: 1, opts: ["Convolution Neural Network", "Create Neural Network", "Connect Neural Network", "Collaborative Neural Network"] },
+            { q: "AGI (artificial general intelligence) 通用人工智慧又稱為強人工智慧，下列何者為 AGI？", ans: 3, opts: ["人臉門禁系統", "車牌辨識系統", "新一代自動駕駛車", "語音助理 (Siri)"] },
+            { q: "關於物聯網之感知層，下列敘述何者正確？", ans: 4, opts: ["感測器閘道屬於感知層", "無線網路屬於感知層", "物聯網雲端平台屬於感知層", "RFID及感測器屬於感知層"] },
+            { q: "下列何者不是室內定位較常使用的技術？", ans: 4, opts: ["Beacon", "Wi-Fi", "RFID", "GPS"] },
+            { q: "您應該使用哪種機器學習類型找出有相似購物習慣的人員群組？", ans: 2, opts: ["迴歸", "叢集", "分類"] },
+            { q: "下列程式碼執行後，會得到何種型態？ type(\"True\")", ans: 2, opts: ["int", "str", "float", "bool"] },
+            { q: "執行以下程式碼之輸出結果為何者？<br>dict1={'Apple':50, 'Orange': 20, 'Banana':15}<br>print(dict1['Orange'])", ans: 2, opts: ["50", "20", "15", "502015"] },
+            { q: "下面程式印出的結果為？<br>x=10<br>def func():<br>&nbsp;&nbsp;&nbsp;&nbsp;x=20<br>func()<br>print(x)", ans: 1, opts: ["10", "20", "30", "40"] },
+            { q: "您將一張影像傳送至電腦視覺 API，並收到包含香蕉與蘋果周圍方框的標註影像。請問此處使用了哪種電腦視覺類型？", ans: 3, opts: ["影像分類", "臉部偵測", "物件偵測", "光學字元辨識(OCR)"] },
+            { q: "現代所稱的人工智慧其實是由許多計算技術所組成的統稱。下列哪一項不屬於人工智慧領域中知名的計算技術的一環？", ans: 4, opts: ["機器學習", "演化計算", "資料探勘", "雲端運算"] },
+            { q: "當模型發生過擬合(Over fitting)的情形時，下列哪一種方法無法緩解？", ans: 3, opts: ["減少模型複雜度", "蒐集更多資料", "增加模型訓練的時間", "使用正則化"] },
+            { q: "對於Python 邏輯判斷表達式，下列哪一項為 False？", ans: 2, opts: ["6 > 0 > -1", "6 != 0 or 3 == 3", "not(6 != 6 and 5 != 5)", "(6 * 6) < (6 ** 6)"] },
+            { q: "下列哪一項不是 Python 合法的變數名稱？", ans: 4, opts: ["self", "int64", "_name_", "64ML"] },
+            { q: "預測貸款是否能償還的銀行系統是何種類型的機器學習之範例？", ans: 1, opts: ["分類", "回歸", "叢集"] },
+            { q: "您需要預測未來 10 年的海平面（以公尺為單位）。您應該使用哪種機器學習類型？", ans: 2, opts: ["叢集", "回歸", "分類"] },
+            { q: "下列哪一個機器學習技術可用於異常偵測？", ans: 1, opts: ["可隨時間分析資料並識別異常變化的技術", "根據影像內容分類物件的技術", "能辨識與理解書面語音的技術", "單純處理資料清理的技術"] },
+            { q: "建置迴歸模型時，標籤的資料類型必須是：", ans: 1, opts: ["數值", "布林值", "文字", "日期時間"] },
+            { q: "關於智慧型電表（Smart meter），下列敘述哪一項正確？", ans: 2, opts: ["是一種感應式電表", "可自動將用電資料上傳到網路", "是以電磁感應線圈原理製作的", "仍需以人力方式進行手動抄表"] },
+            { q: "下列哪個系統不包含在物聯網的智慧家庭應用中？", ans: 3, opts: ["自動照明系統", "火災警示系統", "工廠排程系統", "自動空調系統"] },
+            { q: "在指定日期預測將有多少車輛會通過橋樑，為下列何者的範例？", ans: 3, opts: ["分類", "叢集", "迴歸"] },
+            { q: "下列何者不會印出 3.14 ？", ans: 4, opts: ["print('{:.2f}'.format(3.1415926))", "format(3.1415926,'.2f')", "print(\"%.2f\"%3.1415926)", "print(\"%d\"%3.1415926)"] },
+            { q: "有二維陣列 x=[[1,2,3],[4,5,6],[7,8,9]]，若我們要取得數字 6，要透過以下哪種方式？", ans: 1, opts: ["x[1][2]", "x[0][3]", "x[2][3]", "x[1][1]"] },
+            { q: "以下哪一個項目是 Internet 第3代？", ans: 1, opts: ["Internet of Things", "Internet of Computer", "Internet of People", "Internet of Business"] },
+            { q: "關於物聯網安全，下列敘述何者不正確？", ans: 4, opts: ["複雜性是實現安全的最大障礙之一", "保護物聯網安全與保護一般網路安全沒有太多不同", "設備通過VPN做存取可能會帶來額外風險", "物聯網的頻寬需求問題，比安全問題更為重要"] },
+            { q: "下列何者是深度學習模型？", ans: 4, opts: ["DNN", "RNN", "CNN", "以上皆是"] },
+            { q: "機器學習模型中，希望訓練好的模型能具備什麼樣的特性？", ans: 4, opts: ["高變異、低偏差", "高偏差、低變異", "高偏差、高變異", "偏差與變異之間存在一平衡(Trade-off)關係"] },
+            { q: "圖像識別是以圖像的什麼為基礎來進行判讀的？", ans: 1, opts: ["特徵", "圖元", "元素", "部件"] },
+            { q: "以下哪一個項目不是車輛聯網的主要目的？", ans: 4, opts: ["避免汽車碰撞", "最佳行車路線", "配合交通號誌", "在車內唱KTV"] },
+            { q: "下列哪一個函式是用於檢查該路徑是否為完整（絕對）路徑？", ans: 2, opts: ["exists()", "isabs()", "isfile()", "isdir()"] },
+            { q: "d = {\"籃球\":20, \"足球\":50}，執行程式碼「d.clear()」的作用為？", ans: 1, opts: ["刪除所有元素", "刪除一個元素", "刪除整個字典變數", "以上皆非"] },
+            { q: "您需要建立一套客戶支援解決方案，協助客戶存取資訊，且必須支援電子郵件、電話與即時聊天。您應該使用哪一種 AI 解決方案？", ans: 4, opts: ["機器學習", "自然語言處理(NLP)", "電腦視覺", "聊天機器人"] },
+            { q: "您使用無人機識別生長在農作物之間的雜草，以傳送清除雜草的指示。這是哪種類型的電腦視覺？", ans: 2, opts: ["光學字元辨識(OCR)", "物件偵測", "場景分割", "臉部偵測"] },
+            { q: "建置 K-Means 叢集模型時，所有特徵的資料類型都必須是：", ans: 3, opts: ["整數", "布林值", "數值", "文字"] },
+            { q: "關於智慧電網，下列敘述哪一項錯誤？", ans: 3, opts: ["能收集供應端與使用端電力供應狀況以節能", "包含了智慧型電表基礎建設（AMI）", "改善現有輸電網路效能，但無法整合太陽能等新能源", "目的是由人工監測演進到自動判斷調整控制"] },
+            { q: "利用高速公路即時路況系統來規劃行程避開塞車，不會應用到下列哪個技術？", ans: 4, opts: ["雲端資料庫", "雲端運算", "無線網路", "人臉辨識"] },
+            { q: "在 Python 中宣告：age = 12; minor = False; name = \"David\"。它們的資料類別依序是？", ans: 1, opts: ["int, bool, str", "int, str, str", "float, str, str", "int, bool, int"] },
+            { q: "執行 open(\"local_data\", \"w+\") 的主要作用是什麼？", ans: 1, opts: ["開啟檔案供讀寫，若檔案存在則刪除內容，不存在則建立新檔", "唯讀模式開啟", "附加模式開啟", "僅限寫入且不刪除原本內容"] },
+            { q: "下列哪一項是 IPv6 的位址長度？", ans: 3, opts: ["32 位元", "64 位元", "128 位元", "256 位元"] },
+            { q: "用來進行結果預測的已知資料輸入值，在機器學習中通常稱為：", ans: 1, opts: ["特徵 (Feature)", "標籤 (Label)", "因變項", "識別碼"] },
+            { q: "下列何者是為機器學習與深度學習中常用的知名工具資源？", ans: 4, opts: ["TensorFlow", "PyTorch", "Weka", "以上皆是"] },
+            { q: "一家企業若要引進新一代的物聯網庫存管理技術，下列哪一項最合適？", ans: 1, opts: ["二維條碼加 RFID 識別技術", "紅外線感應", "衛星定位系統", "純錄影監控"] },
+            { q: "關於智慧冷氣的設計概念，下列敘述何者錯誤？", ans: 2, opts: ["可追蹤人體位置調整風向", "頻繁隨手關冷氣出門5分鐘是最節能的行為", "室內溫度提升時調高冷氣運轉效能", "有人進入室內可自動啟動冷氣"] },
+            { q: "您需要計算相片中的動物數目。您應該使用哪種電腦視覺類型？", ans: 1, opts: ["物件偵測", "影像分類", "光學字元辨識", "臉部偵測"] },
+            { q: "確保訓練資料中的數值變數具有相似規模（Scale），這屬於下列何者的範例？", ans: 2, opts: ["模型訓練", "特徵工程", "資料攫取", "特徵選取"] },
+            { q: "以下哪個案例為網頁聊天機器人的最佳範例？", ans: 1, opts: ["在網站介面中，自動回答有關活動與購票等常見問題", "判斷網站評論是正面或負面並加註貼圖", "將客戶文字自動翻譯成英文", "透過電子郵件把訊息人工分流給正確人員"] },
+            { q: "在機器學習分割資料時，通常應該如何切分以供訓練與評估？", ans: 2, opts: ["特徵全部拿來訓練，標籤全部用來評估", "將資料隨機分割為訓練用資料列和評估用資料列", "訓練只用標籤，評估只用特徵", "按奇偶數行嚴格對半切開"] },
+            { q: "智慧型感測器通常使用下列哪一種具有高電容量、低記憶效應的電源模組？", ans: 1, opts: ["鎳氫電池", "水銀電池", "鉛酸電池", "普通碳鋅電池"] },
+            { q: "NFC 裝置基本溝通模式不包含下列哪一個？", ans: 4, opts: ["讀取/寫入模式", "卡片模擬模式", "點對點模式", "面對面模式"] },
+            { q: "什麼是 KDD？", ans: 1, opts: ["數據挖掘與知識發現", "領域知識發現", "文檔知識發現", "動態知識發現"] }
+        ];
 
-      <h3 id="question-text"></h3>
+        let sampledQuestions = [];
 
-      <div id="answers-container"></div>
+        // 初始化：隨機抽取 50 題並打亂選項
+        function initQuiz() {
+            // 隨機排序原題庫並取前 50 題
+            let shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+            sampledQuestions = shuffled.slice(0, 50);
 
-      <div class="nav-buttons">
-        <button id="prev-btn">上一題</button>
-        <button id="next-btn">下一題</button>
-      </div>
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
 
-    </div>
+            sampledQuestions.forEach((item, idx) => {
+                const qNum = idx + 1;
+                
+                // 為了打亂選項，我們建立一個包含原始索引的物件陣列
+                let originalText = item.opts[item.ans - 1]; // 記住正確答案的文字
+                let shuffledOpts = item.opts.map((text, i) => ({ text: text, isCorrect: (i + 1) === item.ans }));
+                shuffledOpts.sort(() => 0.5 - Math.random());
 
-    <button id="submit-btn" class="submit-btn">交卷</button>
+                // 重新定義這題在網頁上的正確答案 value
+                let correctValue = shuffledOpts.findIndex(o => o.isCorrect) + 1;
+                item.webCorrect = correctValue;
+                item.originalQuestionText = item.q;
 
-  </div>
+                let card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `card-${qNum}`;
 
-  <div id="result-screen" class="hidden">
+                let qText = document.createElement('div');
+                qText.className = 'question-text';
+                qText.innerHTML = `${qNum}. ${item.q}`;
+                card.appendChild(qText);
 
-    <div class="card result-card">
+                let oList = document.createElement('ul');
+                oList.className = 'options-list';
 
-      <h1>測驗結果</h1>
+                shuffledOpts.forEach((opt, oIdx) => {
+                    let val = oIdx + 1;
+                    let li = document.createElement('li');
+                    li.className = 'option-item';
+                    li.innerHTML = `<label id="label-${qNum}-${val}"><input type="radio" name="q${qNum}" value="${val}"> (${val}) ${opt.text}</label>`;
+                    oList.appendChild(li);
+                });
 
-      <div id="score-text" class="score"></div>
+                card.appendChild(oList);
 
-      <div id="pass-text" class="pass-text"></div>
+                let fb = document.createElement('div');
+                fb.className = 'feedback-text';
+                fb.id = `fb-${qNum}`;
+                card.appendChild(fb);
 
-      <div id="certificate" class="certificate hidden">
-        🎉 恭喜取得「AI 乙級能力檢定」證照
-      </div>
+                container.appendChild(card);
+            });
+        }
 
-      <button onclick="location.reload()">重新測驗</button>
+        // 檢查答案與評分
+        function checkAnswers() {
+            let score = 0;
+            let wrongItems = [];
+            
+            sampledQuestions.forEach((item, idx) => {
+                const qNum = idx + 1;
+                const selected = document.querySelector(`input[name="q${qNum}"]:checked`);
+                const feedback = document.getElementById(`fb-${qNum}`);
+                const correctVal = item.webCorrect;
 
-    </div>
+                // 清除之前的樣式
+                for(let i=1; i<=4; i++) {
+                    let lbl = document.getElementById(`label-${qNum}-${i}`);
+                    if(lbl) lbl.className = '';
+                }
 
-    <div id="review-container"></div>
+                let isRight = false;
+                let userChoiceText = "未作答";
 
-  </div>
+                if (selected) {
+                    let userVal = parseInt(selected.value);
+                    userChoiceText = document.getElementById(`label-${qNum}-${userVal}`).innerText;
+                    
+                    if (userVal === correctVal) {
+                        score += 2;
+                        isRight = true;
+                        document.getElementById(`label-${qNum}-${userVal}`).className = 'selected-correct';
+                        feedback.innerHTML = "✓ 正確 (+2分)";
+                        feedback.style.color = "var(--success)";
+                    } else {
+                        document.getElementById(`label-${qNum}-${userVal}`).className = 'selected-wrong';
+                        document.getElementById(`label-${qNum}-${correctVal}`).className = 'highlight-correct';
+                        feedback.innerHTML = `✗ 錯誤！正確答案應該是 (${correctVal})`;
+                        feedback.style.color = "var(--danger)";
+                    }
+                } else {
+                    // 未作答
+                    let targetCorrect = document.getElementById(`label-${qNum}-${correctVal}`);
+                    if(targetCorrect) targetCorrect.className = 'highlight-correct';
+                    feedback.innerHTML = `⚠ 未作答！正確答案是 (${correctVal})`;
+                    feedback.style.color = "var(--warning)";
+                }
 
-</div>
+                feedback.style.display = 'block';
 
-<script src="questions.js"></script>
-<script src="script.js"></script>
+                if (!isRight) {
+                    let correctText = document.getElementById(`label-${qNum}-${correctVal}`).innerText;
+                    wrongItems.push({
+                        num: qNum,
+                        q: item.originalQuestionText,
+                        user: userChoiceText,
+                        correct: correctText
+                    });
+                }
+            });
 
+            // 顯示結果面板
+            const resultPanel = document.getElementById('result-panel');
+            const passStatus = document.getElementById('pass-status');
+            const scoreText = document.getElementById('score-text');
+            const wrongSummary = document.getElementById('wrong-summary');
+
+            scoreText.innerText = `總得分：${score} 分`;
+            
+            if (score >= 80) {
+                passStatus.className = 'status-pass';
+                passStatus.innerText = '🎉 恭喜您！測驗及格！';
+            } else {
+                passStatus.className = 'status-fail';
+                passStatus.innerText = '❌ 很遺憾，未達 80 分及格標準，請再接再厲！';
+            }
+
+            // 生成錯題檢討清單
+            if (wrongItems.length > 0) {
+                let html = `<h3>錯題與答案檢討列表 (${wrongItems.length} 題)：</h3>`;
+                wrongItems.forEach(w => {
+                    html += `<div class="wrong-item">
+                        <b>第 ${w.num} 題：</b>${w.q}<br>
+                        <span style="color:var(--danger)">❌ 您的答案：${w.user}</span> | 
+                        <span style="color:var(--success)">➔ 正確答案：${w.correct}</span>
+                    </div><hr style="border:0; border-top:1px dashed #ffe3e3;">`;
+                });
+                wrongSummary.innerHTML = html;
+                wrongSummary.style.display = 'block';
+            } else {
+                wrongSummary.innerHTML = '<h3>✨ 太厲害了！竟然沒有任何錯題！滿分通過！</h3>';
+            }
+
+            resultPanel.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 網頁載入時初始化題目
+        window.onload = initQuiz;
+    </script>
 </body>
 </html>
