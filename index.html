@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>人工智慧乙級證照 - 50題隨機抽考模擬測驗</title>
+    <title>人工智慧乙級證照 - 50題隨機抽考（單題模式）</title>
     <style>
         :root {
             --primary: #1e3c72;
@@ -27,121 +27,153 @@
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             text-align: center;
-            padding: 2rem 1rem;
+            padding: 1.5rem 1rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .container {
-            max-width: 850px;
+            max-width: 700px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
-        .info-panel {
-            background: white;
-            border-left: 5px solid var(--primary);
-            padding: 1.2rem;
-            border-radius: 4px;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* 進度條 */
+        .progress-container {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 12px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
         }
+        .progress-bar {
+            background: linear-gradient(90deg, var(--success), #a8ff78);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+        /* 題目卡片 */
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            display: none; /* 預設隱藏，由JS控制顯示 */
+        }
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .question-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 1.5rem; }
+        .options-list { list-style: none; padding: 0; margin: 0; }
+        .option-item { margin-bottom: 0.8rem; }
+        .option-item label {
+            display: block;
+            padding: 0.9rem 1.2rem;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-item label:hover { background: #e9ecef; border-color: #ced4da; }
+        .option-item input { margin-right: 0.8rem; transform: scale(1.1); }
+        
+        /* 選擇後的樣式（送出前純提示） */
+        .option-item input:checked + span { font-weight: bold; }
+        .option-item input:checked-parent { border-color: var(--primary); } /* CSS無法直接選父層，改用JS控制 */
+        .selected-label { border-color: var(--secondary) !important; background: #eef2f7 !important; }
+
+        /* 按鈕區 */
+        .nav-actions { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 1rem; }
+        button {
+            padding: 0.8rem 1.8rem;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .btn-secondary { background: #ced4da; color: #333; }
+        .btn-secondary:disabled { background: #e9ecef; color: #adb5bd; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn-success { background: linear-gradient(135deg, var(--success), #27ae60); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        button:hover:not(:disabled) { transform: translateY(-2px); opacity: 0.95; }
+
+        /* 結果面板 */
         .result-panel {
             display: none;
             background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .status-pass { color: var(--success); font-size: 1.8rem; font-weight: bold; }
-        .status-fail { color: var(--danger); font-size: 1.8rem; font-weight: bold; }
+        .status-pass { color: var(--success); font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .status-fail { color: var(--danger); font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; }
         .wrong-list {
             text-align: left;
             background: #fff5f5;
             border: 1px solid #ffe3e3;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-top: 1rem;
-        }
-        .wrong-list h3 { margin-top: 0; color: var(--danger); }
-        .wrong-item { margin-bottom: 0.5rem; font-size: 0.95rem; }
-        .question-card {
-            background: var(--card-bg);
-            border-radius: 8px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
         }
-        .question-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; }
-        .options-list { list-style: none; padding: 0; margin: 0; }
-        .option-item { margin-bottom: 0.6rem; }
-        .option-item label {
-            display: block;
-            padding: 0.75rem 1rem;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .option-item label:hover { background: #e9ecef; }
-        .option-item input { margin-right: 0.6rem; }
-        
-        /* 答案反饋樣式 */
-        .selected-correct { border: 2px solid var(--success) !important; background: #e8f8f0 !important; }
-        .selected-wrong { border: 2px solid var(--danger) !important; background: #fdedec !important; }
-        .highlight-correct { border: 2px solid var(--success) !important; background: #e8f8f0 !important; font-weight: bold; }
-        .feedback-text { margin-top: 0.8rem; font-weight: bold; display: none; }
-        
-        .actions { text-align: center; margin: 2rem 0; }
-        button {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 0.8rem 2.5rem;
-            font-size: 1.1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: all 0.2s;
-        }
-        button:hover { transform: translateY(-2px); opacity: 0.95; }
+        .wrong-list h3 { margin-top: 0; color: var(--danger); border-bottom: 2px solid #ffe3e3; padding-bottom: 0.5rem; }
+        .wrong-item { margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.5; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>人工智慧乙級證照能力檢定</h1>
-        <p>50題隨機抽考線上模擬測驗</p>
+        <p>50題隨機抽考（單題翻頁練習模式）</p>
     </header>
 
     <div class="container">
-        <div class="info-panel">
-            💡 <b>測驗規則說明：</b><br>
-            系統已從題庫中<b>隨機抽出 50 題</b>（且每題的選項順序皆已打亂）。<br>
-            每題 2 分，滿分 100 分，<b>及格分數為 80 分</b>。考完後將提供錯題統計與詳細解析！
+        <div id="quiz-box">
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="progress-text" class="progress-text">第 1 / 50 題</div>
+
+            <form id="quiz-form">
+                <div id="dynamic-questions"></div>
+            </form>
+
+            <div class="nav-actions">
+                <button type="button" class="btn-secondary" id="prev-btn" onclick="changeQuestion(-1)" disabled>上一題</button>
+                <button type="button" class="btn-primary" id="next-btn" onclick="changeQuestion(1)">下一題</button>
+                <button type="button" class="btn-success" id="submit-btn" onclick="submitExam()" style="display: none;">送出考卷並評分</button>
+            </div>
         </div>
 
         <div id="result-panel" class="result-panel">
             <div id="pass-status"></div>
-            <h2 id="score-text" style="margin: 0.5rem 0;"></h2>
+            <h2 id="score-text" style="margin: 0.5rem 0 1.5rem 0;"></h2>
             <div id="wrong-summary" class="wrong-list"></div>
-            <button style="margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1.5rem;" onclick="location.reload()">再考一次（重新抽題）</button>
+            <button class="btn-primary" style="margin-top: 1.5rem;" onclick="location.reload()">再挑戰一次（重新抽題）</button>
         </div>
-
-        <form id="quiz-form">
-            <div id="quiz-container"></div>
-            <div class="actions">
-                <button type="button" id="submit-btn" onclick="checkAnswers()">提交考卷並計算分數</button>
-            </div>
-        </form>
     </div>
 
     <script>
-        // 題庫大數據 (精選並規範化自 PDF 全題庫)
+        // 題庫大數據 (內嵌精選題庫)
         const allQuestions = [
             { q: "人工智慧最基本的模型架構三層，以下哪一個不隸屬模型架構？", ans: 4, opts: ["輸入層", "隱藏層", "輸出層", "應用層"] },
             { q: "請寫出 CNN 全名：", ans: 1, opts: ["Convolution Neural Network", "Create Neural Network", "Connect Neural Network", "Collaborative Neural Network"] },
-            { q: "AGI (artificial general intelligence) 通用人工智慧又稱為強人工智慧，下列何者為 AGI？", ans: 3, opts: ["人臉門禁系統", "車牌辨識系統", "新一代自動駕駛車", "語音助理 (Siri)"] },
+            { q: "AGI 通用人工智慧又稱為強人工智慧，下列何者為 AGI？", ans: 3, opts: ["人臉門禁系統", "車牌辨識系統", "新一代自動駕駛車", "語音助理 (Siri)"] },
             { q: "關於物聯網之感知層，下列敘述何者正確？", ans: 4, opts: ["感測器閘道屬於感知層", "無線網路屬於感知層", "物聯網雲端平台屬於感知層", "RFID及感測器屬於感知層"] },
             { q: "下列何者不是室內定位較常使用的技術？", ans: 4, opts: ["Beacon", "Wi-Fi", "RFID", "GPS"] },
             { q: "您應該使用哪種機器學習類型找出有相似購物習慣的人員群組？", ans: 2, opts: ["迴歸", "叢集", "分類"] },
@@ -165,7 +197,7 @@
             { q: "以下哪一個項目是 Internet 第3代？", ans: 1, opts: ["Internet of Things", "Internet of Computer", "Internet of People", "Internet of Business"] },
             { q: "關於物聯網安全，下列敘述何者不正確？", ans: 4, opts: ["複雜性是實現安全的最大障礙之一", "保護物聯網安全與保護一般網路安全沒有太多不同", "設備通過VPN做存取可能會帶來額外風險", "物聯網的頻寬需求問題，比安全問題更為重要"] },
             { q: "下列何者是深度學習模型？", ans: 4, opts: ["DNN", "RNN", "CNN", "以上皆是"] },
-            { q: "機器學習模型中，希望訓練好的模型能具備什麼樣的特性？", ans: 4, opts: ["高變異、低偏差", "高偏差、低變異", "高偏差、高變異", "偏差與變異之間存在一平衡(Trade-off)關係"] },
+            { q: "機器學習模型中，希望訓練好的模型能具備什麼樣的特性？", ans: 4, opts: ["高變異、低偏差", "高偏差、低變異", "高偏差、高變異", "偏差與變異之間存在一平衡關係"] },
             { q: "圖像識別是以圖像的什麼為基礎來進行判讀的？", ans: 1, opts: ["特徵", "圖元", "元素", "部件"] },
             { q: "以下哪一個項目不是車輛聯網的主要目的？", ans: 4, opts: ["避免汽車碰撞", "最佳行車路線", "配合交通號誌", "在車內唱KTV"] },
             { q: "下列哪一個函式是用於檢查該路徑是否為完整（絕對）路徑？", ans: 2, opts: ["exists()", "isabs()", "isfile()", "isdir()"] },
@@ -192,37 +224,35 @@
         ];
 
         let sampledQuestions = [];
+        let currentIdx = 0; // 目前顯示的題號索引（0-49）
 
-        // 初始化：隨機抽取 50 題並打亂選項
         function initQuiz() {
-            // 隨機排序原題庫並取前 50 題
+            // 隨機抽選 50 題
             let shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
             sampledQuestions = shuffled.slice(0, 50);
 
-            const container = document.getElementById('quiz-container');
+            const container = document.getElementById('dynamic-questions');
             container.innerHTML = '';
 
             sampledQuestions.forEach((item, idx) => {
                 const qNum = idx + 1;
                 
-                // 為了打亂選項，我們建立一個包含原始索引的物件陣列
-                let originalText = item.opts[item.ans - 1]; // 記住正確答案的文字
+                // 打亂選項
                 let shuffledOpts = item.opts.map((text, i) => ({ text: text, isCorrect: (i + 1) === item.ans }));
                 shuffledOpts.sort(() => 0.5 - Math.random());
 
-                // 重新定義這題在網頁上的正確答案 value
-                let correctValue = shuffledOpts.findIndex(o => o.isCorrect) + 1;
-                item.webCorrect = correctValue;
-                item.originalQuestionText = item.q;
+                // 紀錄新打亂後的正確答案編號
+                item.webCorrect = shuffledOpts.findIndex(o => o.isCorrect) + 1;
+                item.webOptsHTML = shuffledOpts; // 保存起來做最後的錯題輸出
 
                 let card = document.createElement('div');
-                card.className = 'question-card';
-                card.id = `card-${qNum}`;
+                card.className = `question-card ${idx === 0 ? 'active' : ''}`;
+                card.id = `qcard-${idx}`;
 
-                let qText = document.createElement('div');
-                qText.className = 'question-text';
-                qText.innerHTML = `${qNum}. ${item.q}`;
-                card.appendChild(qText);
+                let qTitle = document.createElement('div');
+                qTitle.className = 'question-title';
+                qTitle.innerHTML = item.q;
+                card.appendChild(qTitle);
 
                 let oList = document.createElement('ul');
                 oList.className = 'options-list';
@@ -231,115 +261,138 @@
                     let val = oIdx + 1;
                     let li = document.createElement('li');
                     li.className = 'option-item';
-                    li.innerHTML = `<label id="label-${qNum}-${val}"><input type="radio" name="q${qNum}" value="${val}"> (${val}) ${opt.text}</label>`;
+                    li.innerHTML = `
+                        <label id="lbl-${idx}-${val}" onclick="selectOption(${idx}, ${val})">
+                            <input type="radio" name="rawq${idx}" value="${val}" style="pointer-events:none;"> 
+                            (${val}) ${opt.text}
+                        </label>`;
                     oList.appendChild(li);
                 });
 
                 card.appendChild(oList);
-
-                let fb = document.createElement('div');
-                fb.className = 'feedback-text';
-                fb.id = `fb-${qNum}`;
-                card.appendChild(fb);
-
                 container.appendChild(card);
             });
+
+            updateProgress();
         }
 
-        // 檢查答案與評分
-        function checkAnswers() {
+        // 當點擊選項時，高亮顯示該外框
+        function selectOption(qIdx, val) {
+            // 清除該題所有高亮
+            for (let i = 1; i <= 4; i++) {
+                let target = document.getElementById(`lbl-${qIdx}-${i}`);
+                if (target) target.classList.remove('selected-label');
+            }
+            // 高亮目前選中的
+            document.getElementById(`lbl-${qIdx}-${val}`).classList.add('selected-label');
+            
+            // 真正勾選內部的 radio 按鈕
+            const radios = document.getElementsByName(`rawq${qIdx}`);
+            radios[val-1].checked = true;
+        }
+
+        // 更新進度條與題號文字
+        function updateProgress() {
+            const total = sampledQuestions.length;
+            const currentNum = currentIdx + 1;
+            
+            document.getElementById('progress-text').innerText = `第 ${currentNum} / ${total} 題`;
+            document.getElementById('progress-bar').style.width = `${(currentNum / total) * 100}%`;
+
+            // 控制按鈕顯示
+            document.getElementById('prev-btn').disabled = (currentIdx === 0);
+            
+            if (currentIdx === total - 1) {
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('submit-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('next-btn').style.display = 'inline-block';
+                document.getElementById('submit-btn').style.display = 'none';
+            }
+        }
+
+        // 切換上下題
+        function changeQuestion(step) {
+            // 隱藏目前這一題
+            document.getElementById(`qcard-${currentIdx}`).classList.remove('active');
+            
+            // 改變索引值
+            currentIdx += step;
+            
+            // 顯示新題目
+            document.getElementById(`qcard-${currentIdx}`).classList.add('active');
+            
+            updateProgress();
+        }
+
+        // 提交試卷
+        function submitExam() {
             let score = 0;
             let wrongItems = [];
-            
+
             sampledQuestions.forEach((item, idx) => {
-                const qNum = idx + 1;
-                const selected = document.querySelector(`input[name="q${qNum}"]:checked`);
-                const feedback = document.getElementById(`fb-${qNum}`);
+                const selected = document.querySelector(`input[name="rawq${idx}"]:checked`);
                 const correctVal = item.webCorrect;
-
-                // 清除之前的樣式
-                for(let i=1; i<=4; i++) {
-                    let lbl = document.getElementById(`label-${qNum}-${i}`);
-                    if(lbl) lbl.className = '';
-                }
-
-                let isRight = false;
-                let userChoiceText = "未作答";
+                let userText = "未作答";
+                let correctText = `(${correctVal}) ` + item.webOptsHTML[correctVal-1].text;
 
                 if (selected) {
                     let userVal = parseInt(selected.value);
-                    userChoiceText = document.getElementById(`label-${qNum}-${userVal}`).innerText;
-                    
+                    userText = `(${userVal}) ` + item.webOptsHTML[userVal-1].text;
                     if (userVal === correctVal) {
                         score += 2;
-                        isRight = true;
-                        document.getElementById(`label-${qNum}-${userVal}`).className = 'selected-correct';
-                        feedback.innerHTML = "✓ 正確 (+2分)";
-                        feedback.style.color = "var(--success)";
-                    } else {
-                        document.getElementById(`label-${qNum}-${userVal}`).className = 'selected-wrong';
-                        document.getElementById(`label-${qNum}-${correctVal}`).className = 'highlight-correct';
-                        feedback.innerHTML = `✗ 錯誤！正確答案應該是 (${correctVal})`;
-                        feedback.style.color = "var(--danger)";
+                        return; // 答對了，跳過加入錯題集
                     }
-                } else {
-                    // 未作答
-                    let targetCorrect = document.getElementById(`label-${qNum}-${correctVal}`);
-                    if(targetCorrect) targetCorrect.className = 'highlight-correct';
-                    feedback.innerHTML = `⚠ 未作答！正確答案是 (${correctVal})`;
-                    feedback.style.color = "var(--warning)";
                 }
 
-                feedback.style.display = 'block';
-
-                if (!isRight) {
-                    let correctText = document.getElementById(`label-${qNum}-${correctVal}`).innerText;
-                    wrongItems.push({
-                        num: qNum,
-                        q: item.originalQuestionText,
-                        user: userChoiceText,
-                        correct: correctText
-                    });
-                }
+                // 沒答對則紀錄到錯題報告
+                wrongItems.push({
+                    num: idx + 1,
+                    q: item.q,
+                    user: userText,
+                    correct: correctText
+                });
             });
 
-            // 顯示結果面板
+            // 隱藏作答區
+            document.getElementById('quiz-box').style.display = 'none';
+
+            // 計算與顯示結果
             const resultPanel = document.getElementById('result-panel');
             const passStatus = document.getElementById('pass-status');
             const scoreText = document.getElementById('score-text');
             const wrongSummary = document.getElementById('wrong-summary');
 
-            scoreText.innerText = `總得分：${score} 分`;
-            
+            scoreText.innerText = `您的總得分：${score} 分`;
+
             if (score >= 80) {
                 passStatus.className = 'status-pass';
-                passStatus.innerText = '🎉 恭喜您！測驗及格！';
+                passStatus.innerText = '🎉 恭喜您！通過檢定！';
             } else {
                 passStatus.className = 'status-fail';
-                passStatus.innerText = '❌ 很遺憾，未達 80 分及格標準，請再接再厲！';
+                passStatus.innerText = '❌ 未達 80 分及格標準，再加把勁！';
             }
 
-            // 生成錯題檢討清單
+            // 渲染錯題清單
             if (wrongItems.length > 0) {
-                let html = `<h3>錯題與答案檢討列表 (${wrongItems.length} 題)：</h3>`;
+                let html = `<h3>錯題與答案詳細檢討 (${wrongItems.length} 題)：</h3>`;
                 wrongItems.forEach(w => {
                     html += `<div class="wrong-item">
                         <b>第 ${w.num} 題：</b>${w.q}<br>
-                        <span style="color:var(--danger)">❌ 您的答案：${w.user}</span> | 
+                        <span style="color:var(--danger)">❌ 您的作答：${w.user}</span><br>
                         <span style="color:var(--success)">➔ 正確答案：${w.correct}</span>
-                    </div><hr style="border:0; border-top:1px dashed #ffe3e3;">`;
+                    </div><hr style="border:0; border-top:1px dashed #ffe3e3; margin:0.8rem 0;">`;
                 });
                 wrongSummary.innerHTML = html;
                 wrongSummary.style.display = 'block';
             } else {
-                wrongSummary.innerHTML = '<h3>✨ 太厲害了！竟然沒有任何錯題！滿分通過！</h3>';
+                wrongSummary.innerHTML = '<h3>✨ 太神了！零錯題全對通關！</h3>';
             }
 
             resultPanel.style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 網頁載入時初始化題目
         window.onload = initQuiz;
     </script>
 </body>
