@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI 乙級能力檢定</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- 首頁 -->
+    <div id="start-screen" class="card">
+      <h1>AI 乙級能力檢定</h1>
+
+      <p class="description">
+        本測驗共 50 題，每題 2 分。<br>
+        滿分 100 分，80 分以上可取得證照。
+      </p>
+
+      <button id="start-btn">開始測驗</button>
+    </div>
+
+    <!-- 測驗頁 -->
+    <div id="quiz-screen" class="hidden">
+
+      <div class="top-bar">
+        <h2>AI 乙級能力檢定</h2>
+        <div id="progress">第 1 題 / 50 題</div>
+      </div>
+
+      <div class="card">
+
+        <h3 id="question-text">
+          題目載入中...
+        </h3>
+
+        <div id="answers-container" class="answers">
+          <!-- JS 動態生成 -->
+        </div>
+
+        <div class="navigation">
+          <button id="prev-btn">上一題</button>
+          <button id="next-btn">下一題</button>
+        </div>
+
+      </div>
+
+      <div class="submit-area">
+        <button id="submit-btn">交卷</button>
+      </div>
+
+    </div>
+
+    <!-- 結果頁 -->
+    <div id="result-screen" class="hidden">
+
+      <div class="card result-card">
+
+        <h1>測驗結果</h1>
+
+        <div id="score-text" class="score">
+          你的分數：0 分
+        </div>
+
+        <div id="pass-text" class="pass-status">
+          未通過
+        </div>
+
+        <div id="certificate" class="hidden certificate">
+          🎉 恭喜取得「AI 乙級能力檢定」證照
+        </div>
+
+        <button onclick="location.reload()">
+          重新測驗
+        </button>
+
+      </div>
+
+      <!-- 錯題區 -->
+      <div id="review-container">
+        <!-- JS 動態生成 -->
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
